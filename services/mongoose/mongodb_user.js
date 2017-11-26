@@ -1,4 +1,4 @@
-const User = require('../models/mongoose/user');
+const User = require('../../models/mongoose/user');
 
 async function addNewUser(data) {
   const user = await User.insert(data);
@@ -7,6 +7,11 @@ async function addNewUser(data) {
 
 async function getUserByOpenid(id) {
   const user = await User.getOneByOpenid(id);
+  return user;
+}
+
+async function getUserByOpenidAndUpdate(id, datas) {
+  const user = await User.getOneByOpenidAndUpdate(id, datas);
   return user;
 }
 
@@ -23,6 +28,7 @@ async function getAllUsers() {
 module.exports = {
   addNewUser,
   getUserByOpenid,
+  getUserByOpenidAndUpdate,
   getUserByNickname,
   getAllUsers,
 };
