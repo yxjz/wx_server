@@ -1,30 +1,69 @@
-# wx_server
-### post请求 
+### 微信小程序服务端实例
+
+> 服务对象为微信小程序客户端，此实例为笔记小程序的服务端 因此提供简单笔记类app需要的接口
+
+---
+
+## ⊙ 接口简介
 
 ##### 1. /decrypt
 
-###### 请求体内容appID sessionKey encryptedData iv
+- method: POST
 
-根据openId判断是否已经存在用户，不存在将添加用户信息至数据库
+- 对收到的签名加密数据进行解密 返回用户明文信息
 
-##### 2. /:openId/sub
+- ###### 传入参数 appID sessionKey encryptedData iv
 
-###### 请求体内容 openId datas
+##### 2. /create
 
-根据openId查找到数据库相应用户 并更新改用户的相应数据datas
+- method: POST
 
-##### 3. /getuserbyopenid
+- 客户端每次提交create请求 则会在数据库创建一个对象 用于存储文章的标题内容等等
 
-###### 请求体内容 openId
+- ###### 传入参数 openId
 
-根据openId查找到数据库相应用户并返回用户信息
+##### 3./sub
 
-##### 4. /getuserbynickname
+- method: POST
 
-###### 请求体内容 nickName
+- 每次提交sub请求 则会将用户传入的数据存入数据库
 
-根据nickName查找到数据库相应用户并返回所有符合条件的用户信息（可能重复）
+- ###### 传入参数 openId worksId works
 
-##### 5. /getallusers
+##### 4./download
 
-返回所有用户信息
+- method: GET
+
+- 编辑文章时需要下载图片/录音等文件
+
+- ###### 传入参数 openId worksId filepath (header)
+
+##### 5./getworks
+
+- method: POST
+
+- 查询指定openId的works内容
+
+- ###### 传入参数 openId worksId
+
+##### 6./getuserbyopenid
+
+- method: POST
+
+- 查询指定openId的内容
+
+- ###### 传入参数 openId
+
+7./getuserbynickname
+
+- method: POST
+
+- 查询指定nickName的内容
+
+- ###### 传入参数 nickName
+
+##### 8./getallusers
+
+- method: POST
+
+- 查询所有用户信息

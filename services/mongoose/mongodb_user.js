@@ -10,8 +10,18 @@ async function getUserByOpenid(id) {
   return user;
 }
 
-async function getUserByOpenidAndUpdate(id, datas) {
-  const user = await User.getOneByOpenidAndUpdate(id, datas);
+async function getUserByOpenidAndWorksid(id, worksid) {
+  const user = await User.getOneByOpenidAndWorksid(id, worksid);
+  return user;
+}
+
+async function getUserByOpenidAndCreate(id, datas) {
+  const user = await User.getOneByOpenidAndCreate(id, datas);
+  return user;
+}
+
+async function getUserByOpenidAndUpdate(id, worksid, datas, key, first) {
+  const user = await User.getOneByOpenidAndUpdate(id, worksid, datas, key, first);
   return user;
 }
 
@@ -25,10 +35,18 @@ async function getAllUsers() {
   return users;
 }
 
+async function getFiles(id, worksid, originalname, path, type) {
+  const file = await User.getFiles(id, worksid, originalname, path, type);
+  return file;
+}
+
 module.exports = {
   addNewUser,
   getUserByOpenid,
+  getUserByOpenidAndWorksid,
+  getUserByOpenidAndCreate,
   getUserByOpenidAndUpdate,
   getUserByNickname,
   getAllUsers,
+  getFiles,
 };
