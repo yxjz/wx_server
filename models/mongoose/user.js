@@ -5,6 +5,8 @@ const upload = multer({ dest: './mongodb/db' });
 
 const fs = require('fs');
 
+const logger = require('../../utils/loggers/logger');
+
 const { Schema } = mongoose;
 
 const UserSchema = new Schema({
@@ -130,7 +132,7 @@ async function getFiles(id, worksid, originalname, path, type) {
             } else {
               fs.mkdir(`mongodb/db/${id}/${worksid}`, (err) => {
                 if (err) {
-                  console.log(err, "1");
+                  logger.error(err, "创建worksid目录失败");
                 } else {
                   fs.rename(filePath, fileName, (err) => {
                     if (err) return new Error('文件写入失败');
@@ -142,11 +144,11 @@ async function getFiles(id, worksid, originalname, path, type) {
         } else {
           fs.mkdir(`mongodb/db/${id}`, (err) => {
             if (err) {
-              console.log(err, "2");
+              logger.error(err, "创建openid目录失败");
             } else {
               fs.mkdir(`mongodb/db/${id}/${worksid}`, (err) => {
                 if (err) {
-                  console.log(err, "3");
+                  logger.error(err, "创建worksid目录失败");
                 } else {
                   fs.rename(filePath, fileName, (err) => {
                     if (err) return new Error('文件写入失败');
