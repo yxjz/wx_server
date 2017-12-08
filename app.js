@@ -4,6 +4,11 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
 
+const HTTPErrorHandler = require('./middlewares/http_error_handler');
+const errorHandler = require('./middlewares/error_handler');
+
+const winston = require('./utils/loggers/logger');
+
 require('./services/mongoose/mongodb_connection');
 
 const index = require('./routes/index');
@@ -26,22 +31,18 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', index);
 app.use('/user', users);
 
-// catch 404 and forward to error handler
-app.use((req, res, next) => {
-  const err = new Error('Not Found');
-  err.status = 404;
-  next(err);
-});
+// HTTP error handler
+app.use(HTTPErrorHandler());
 
 // error handler
-app.use((err, req, res) => {
-  // set locals, only providing error in development
-  res.locals.message = err.message;
-  res.locals.error = req.app.get('env') === 'development' ? err : {};
+app.use(errorHandler());
 
-  // render the error page
-  res.status(err.status || 500);
-  res.render('error');
+process.on('uncaughtException', (err) => {
+  winston.error(err);
+});
+
+process.on('unhandledRejection', (reason, p) => {
+  winston.error('Unhandled Rejection at:', p, 'reason:', reason);
 });
 
 module.exports = app;
