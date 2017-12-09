@@ -4,17 +4,38 @@
 
 ---
 
+根据微信小程序提供的登录时序 实现以下：
+
+1. 小程序通过wx.login()获取到code并发送POST请求 **jscode2session** ( **appid secret code** ) 到服务器
+2. 服务器接收到相应参数后发送GET请求( **appid secret code** )到微信服务器 返回 **openid session_key**
+3. 服务器将返回内容传回小程序端
+
+> ### 登录时序图
+> ![image](https://mp.weixin.qq.com/debug/wxadoc/dev/image/login.png?t=2017127)
+
+---
+
 ## ⊙ 接口简介
 
-##### 1. /decrypt
+##### 1. /jscode2session
 
 - method: POST
+
+- 接受微信客户端传入的参数 利用这些参数请求微信服务器得到openid session_key
+
+- ###### 传入参数 appid secret code
+
+##### 2. /decrypt
+
+- method: POST
+
+- ##### 下方所有请求的前提条件 正确解密信息后才会从数据库添加用户信息
 
 - 对收到的签名加密数据进行解密 返回用户明文信息
 
 - ###### 传入参数 appID sessionKey encryptedData iv
 
-##### 2. /create
+##### 3. /create
 
 - method: POST
 
@@ -22,7 +43,7 @@
 
 - ###### 传入参数 openId
 
-##### 3./sub
+##### 4. /sub
 
 - method: POST
 
@@ -30,7 +51,7 @@
 
 - ###### 传入参数 openId worksId works
 
-##### 4./download
+##### 5. /download
 
 - method: GET
 
@@ -38,7 +59,7 @@
 
 - ###### 传入参数 openId worksId filepath (header)
 
-##### 5./getworks
+##### 6. /getworks
 
 - method: POST
 
@@ -46,7 +67,7 @@
 
 - ###### 传入参数 openId worksId
 
-##### 6./getuserbyopenid
+##### 7. /getuserbyopenid
 
 - method: POST
 
@@ -62,7 +83,7 @@
 
 - ###### 传入参数 nickName
 
-##### 8./getallusers
+##### 8. /getallusers
 
 - method: POST
 

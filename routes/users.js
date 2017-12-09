@@ -4,6 +4,7 @@ const router = express.Router();
 const multer = require('multer');
 const upload = multer({ dest: './mongodb/db' });
 
+const jscode2session = require('../services/jscode2session/jscode2session');
 const getDecryptions = require('../services/decrypt/decrypt_service');
 const mongo = require('../services/mongoose/mongodb_user');
 const files = require('../services/file_operation/file_operation');
@@ -16,6 +17,29 @@ router.get('/', (req, res) => {
 });
 
 /**
+ * 接受微信客户端传入的参数 利用这些参数请求微信服务器得到openid session_key
+ * 传入参数 appid secret code
+ */
+router.post('/jscode2session', (req, res, next) => {
+  (async () => {
+    const existingParam = req.body.appid && req.body.secret && req.body.code;
+    if (existingParam) {
+      const data = await jscode2session.request(req.body.appid, req.body.secret, req.body.code);
+      return data;
+    } else {
+      throw new HTTPParamError('appid,secret,code', 'jscode2session请求错误 传入参数错误', 'jscode2session wrong');
+    }
+  })()
+    .then((r) => {
+      res.send(r);
+    })
+    .catch((e) => {
+      next(e);
+    });
+});
+
+/**
+ * 下方所有请求的前提条件 正确解密信息后才会从数据库添加用户信息
  * 对收到的签名加密数据进行解密 返回用户明文信息
  * 传入参数 appID sessionKey encryptedData iv
  */
@@ -24,15 +48,16 @@ router.post('/decrypt', (req, res, next) => {
     const existingParam = req.body.appId && req.body.sessionKey && req.body.encryptedData && req.body.iv;
     if (existingParam) {
       // 得到appID sessionKey encryptedData iv，然后调用解密并返回解密的信息
-      const after = await getDecryptions.getDecryption(
+      let after = await getDecryptions.getDecryption(
         req.body.appId,
         req.body.sessionKey,
         req.body.encryptedData,
         req.body.iv,
       );
+      after.works = [];
       // 判断是否已经存在用户 不存在则将解密后的用户信息after存入数据库
       const user = await mongo.getUserByOpenid(after.openId);
-      if (user) return new Error('已经存在用户');
+      if (user) return user;
       return mongo.addNewUser(after);
     } else {
       throw new HTTPParamError('appID,sessionKey,encryptedData,iv', '解密请求错误 传入参数错误', 'decrypt wrong');
@@ -92,13 +117,16 @@ router.post('/create', (req, res, next) => {
 
 /**
  * 每次提交sub请求 则会将用户传入的数据存入数据库
- * 传入参数 openId worksId works
+ * 传入参数 openId worksId works(非必填)
  */
 router.post('/sub', upload.single('file'), (req, res, next) => {
   (async () => {
-    const existingParam = req.body.openId && req.body.worksId && req.body.works;
+    let existingParam = req.body.openId && req.body.worksId;
+    if (req.body.worksId == 0 && req.body.openId) {
+      existingParam = true;
+    }
     if (existingParam) {
-      // 如果有上传的文件则整理存储文件 没有则正常存储内容
+      // 如果有上传的文件则整理存储文件 没有则正常存储文字
       if (req.file) {
         // 上传文件需要客户端在header内加入键firstanddelete 如果此键值为1 则表明为第一次上传 将删除对应目录下所有文件 防止重复 值为1时则正常上传
         if (req.headers.firstanddelete === '1') {
@@ -131,7 +159,10 @@ router.post('/sub', upload.single('file'), (req, res, next) => {
  */
 router.get('/download', (req, res, next) => {
   (async () => {
-    const existingParam = req.headers.openid && req.headers.worksid && req.headers.filepath;
+    let existingParam = req.headers.openid && req.headers.worksid && req.headers.filepath;
+    if (req.body.worksId == 0 && req.body.openId) {
+      existingParam = true;
+    }
     if (existingParam) {
       // 先根据openId worksId查到文件的数组 如果有相应数据则返回文件
       const user = await mongo.getUserByOpenidAndWorksid(req.headers.openid, req.headers.worksid);
@@ -164,7 +195,10 @@ router.get('/download', (req, res, next) => {
  */
 router.post('/getworks', (req, res, next) => {
   (async () => {
-    const existingParam = req.body.openId && req.body.worksId;
+    let existingParam = req.body.openId && req.body.worksId;
+    if (req.body.worksId == 0 && req.body.openId) {
+      existingParam = true;
+    }
     if (existingParam) {
       const user = await mongo.getUserByOpenidAndWorksid(req.body.openId, req.body.worksId);
       return user;
